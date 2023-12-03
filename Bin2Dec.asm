@@ -61,8 +61,32 @@ M=0 //when there is no input, kbd is set to a value less than 1
     @as_checkOneZero
     D;JGE //executes if bits <=16. jumps if greater than or equal to 0
 
-    (as_checkOneZero) //checks if input is 0 or 1 
-        @as_userInput
-        D=M
+    (as_continueInputValidation)
+    
 
-        //if zero, then jump to kp_outputKey 
+    (as_checkOneZero) //checks if userInput is 48 or 49 
+        @as_getKey //if input is a 48, call kp_outputKey
+        D=A
+        @kp_return
+        M=D //kp_return will now return to as_getKey
+
+        @48
+        D=A
+        @as_userInput
+        D=M-D //48-48 = 0
+        @kp_outputKey
+        D;JEQ //executes jump if input is 48 (48 equals 0)
+        
+        //ELSE
+        //execute if equal to 49
+        D=D-1 //if it is 1, now it is 0
+        D;JEQ //executes jump if input was 49
+
+        //ELSE input was not 0 or 1, jump to continue input validation
+        @as_continueInputValidation
+        0;JMP
+    
+
+(END)
+    @END
+    0;JMP  
