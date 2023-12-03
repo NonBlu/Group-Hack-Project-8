@@ -30,18 +30,13 @@
 //if correct input, display on screen
 //or do command
 
-@as_bitCounter
-D=A
-@0
-M=A //create an incrememnter responsible for tracking how many bits are entered
-
 @ge_currentColumn //tracks cursor
 M=0
 
-@KBD
-M=0 //when there is no input, kbd is set to a value less than 1
-(as_getKey) //infinite loop that runs until a valid input is pressed
+@as_processBufBool //boolean that is equal to 1 if processBuf function has been executed
+M=0
 
+(as_getKey) //infinite loop that runs until a valid input is pressed
     @KBD    // get value of keyboard
     D=M
 
@@ -50,25 +45,120 @@ M=0 //when there is no input, kbd is set to a value less than 1
 
     //user has entered a key, must now validaate input
 
-    //if statements to validate input
-    //first check if as_bitCounter is <=16 
+    //store user input
     @as_userInput
     M=D
-    @as_bitCounter
+
+    //if statements to validate input
+    //first check if ge_currentColumn is <=15 
+    @ge_currentColumn
     D=M
-    @16
-    D=A-D //if bit counter is 16, will be 0. if bit counter is less than 16, will be positive
+    @15
+    D=A-D //if 15 bits entered, will be 0.This is because current column is 15
+          //if current column is 16, then this means no more inputs can occur.
+          //this is represented as D<0
     @as_checkOneZero
     D;JGE //executes if bits <=16. jumps if greater than or equal to 0
 
-    (as_continueInputValidation)
+    //ELSE bits are greater than 16 entered OR entry was not a 0 or 1
     
+    (as_continueInputValidation)
+    //Now we check to see if a backspace was entered
+    //if so, execute cz_backspace
+        @as_getKey //if input is a 129, call cz_delBuf, then return to as_getKey
+        D=A
+        @cz_return
+        M=D //kp_return will now return to as_getKey
+
+        @129
+        D=A
+        @as_userInput
+        D=M-D //129-129 = 0
+        @cz_delBuf
+        D;JEQ //executes jump if input is 129
+        //Else, backspace has not been entered
+
+        //now check if c has been entered
+        @as_getKey //if input is a 67, call as_clearBuf, then return to as_getKey
+        D=A
+        @as_return
+        M=D //kp_return will now return to as_getKey
+
+        @67
+        D=A
+        @as_userInput
+        D=M-D //67-67 = 0
+        @as_clearBuf
+        D;JEQ //executes jump if input is 67
+
+        //Else, c has not been entered
+        
+        //now check if q has been entered
+        @END //if input is a 81, call as_clearBuf, then end the program
+        D=A
+        @as_return
+        M=D //kp_return will now return to as_getKey
+
+        @81
+        D=A
+        @as_userInput
+        D=M-D //81-81 = 0
+        @as_clearBuf
+        D;JEQ //executes jump if input is 81
+
+        //Else, q has not been entered
+
+        //Now check to see if bits = 16 and enter has been pressed (input is 128)
+
+        //first check if bits is 16
+        //if bits is not 16, return back to as_getKey
+
+        @ge_currentColumn
+        D=M
+        @16
+        D=A-D
+        @as_getKey
+        D;JNE //executes if bits is not 16
+
+        //Then, bits must be 16, which means we check for enter key
+        @128
+        D=A
+        @as_userInput
+        D=M-D //userinput-128 = 0
+        @as_getKey
+        D;JNE //executes jump if input is not enter
+
+        //This must mean bits is 16 and enter key has been pressed!
+        
+        //Now we check to see if buf has already been processed.
+        //if as_processBufBool = 1, then set it to 0 and clear buf
+        //else set it to 1 and proceed
+
+        @as_processBufBool
+        D=M
+
+        @as_restart
+        D;JGT //if as_processBufBool is greater than 0 (1), 
+              //then restart program by clearing buf, restarting cols, set processbufbool to 0 and jumping to getKey
+
+        //ELSE, buffer has not been processed
+        //Now we call processBuf
+        @as_processBufBool
+        M=1 //bool that indicates processBuf has occured
+
+        @as_getKey //set return value to as_getKey
+        D=A
+        @ar_return
+        M=D //ar_return will now return to as_getKey
+
+        @ar_processBuf
+        0;JMP //jump to process buf!
 
     (as_checkOneZero) //checks if userInput is 48 or 49 
-        @as_getKey //if input is a 48, call kp_outputKey
+        @cz_addBuf //if input is a 48, call kp_outputKey
         D=A
         @kp_return
-        M=D //kp_return will now return to as_getKey
+        M=D //kp_return will now return to cz_addBuf
 
         @48
         D=A
@@ -86,6 +176,17 @@ M=0 //when there is no input, kbd is set to a value less than 1
         @as_continueInputValidation
         0;JMP
     
+(as_restart) //this function will clear buffer, set processbufbool to 0, and return to key
+    @as_processBufBool
+    M=0
+
+    @as_getKey 
+    D=A
+    @as_return
+    M=D //as_return will now return to as_getKey
+
+    @as_clearBuf
+    0;JMP //executes jump to clear buf, function will return to getKey when done
 
 (END)
     @END
