@@ -36,6 +36,19 @@ M=0
 @as_processBufBool //boolean that is equal to 1 if processBuf function has been executed
 M=0
 
+//TESTTTT
+
+// @SCREEN
+// D=A
+// @dot
+// M=D
+// @32
+// M=D+A
+// @dot
+// A=M
+// M=-1
+
+
 (as_getKey) //infinite loop that runs until a valid input is pressed
     @KBD    // get value of keyboard
     D=M
@@ -187,6 +200,73 @@ M=0
 
     @as_clearBuf
     0;JMP //executes jump to clear buf, function will return to getKey when done
+
+(as_clearBuf) //this function will clear the values of R0-R15, as well as wipe the values of all columns
+              //this function will then return using as_return
+    @R0
+    M=-1
+    @R1
+    M=-1
+    @R2
+    M=-1
+    @R3
+    M=-1
+    @R4
+    M=-1
+    @R5
+    M=-1
+    @R6
+    M=-1
+    @R7
+    M=-1
+    @R8
+    M=-1
+    @R9
+    M=-1
+    @R10
+    M=-1
+    @R11
+    M=-1
+    @R12
+    M=-1
+    @R13
+    M=-1
+    @R14
+    M=-1
+    @R15
+    M=-1 //results all input registers
+
+    @as_userInput
+    M=-1 //resets user input
+
+    @ge_currentColumn
+    M=0 //resets current column
+
+    @SCREEN //get screen and have as_i point to screen
+    D=A
+    @as_i  
+    M=D 
+ 
+    (as_clearScreen)  
+        @as_i
+        A=M
+        M=0 //sets whats in i equal to white
+        
+        @i
+        M=M+1 //increments i
+
+        // Check to see if we're in the last pixel
+        @KBD
+        D=A
+        @i
+        D=D-M
+        @as_endR // if we are not in the last pixel
+        D;JEQ
+        //if last pixel, return
+        @as_return //continue changing the screen color
+        A=M
+        0;JMP
+//END OF as_clearBuf
 
 (END)
     @END
