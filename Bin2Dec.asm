@@ -30,6 +30,15 @@
 //if correct input, display on screen
 //or do command
 
+
+//=================================================
+//Functions that still need to be completed:
+//kp_output
+//cz_delBuf
+//cz_addBuf
+//ar_processBuf
+//
+//===============================================
 @ge_currentColumn //tracks cursor
 M=0
 
@@ -203,41 +212,35 @@ M=0
 
 (as_clearBuf) //this function will clear the values of R0-R15, as well as wipe the values of all columns
               //this function will then return using as_return
+    
+    @as_incr
+    M=0
+    
     @R0
-    M=-1
-    @R1
-    M=-1
-    @R2
-    M=-1
-    @R3
-    M=-1
-    @R4
-    M=-1
-    @R5
-    M=-1
-    @R6
-    M=-1
-    @R7
-    M=-1
-    @R8
-    M=-1
-    @R9
-    M=-1
-    @R10
-    M=-1
-    @R11
-    M=-1
-    @R12
-    M=-1
-    @R13
-    M=-1
-    @R14
-    M=-1
-    @R15
-    M=-1 //results all input registers
+    D=M
+    @as_addr
+    M=D //as_addr = R0
+    (as_resetBufLoop)
+        @as_addr
+        D=M
+        @as_incr
+        A=D+M //increment R based on incr
+        M=-1
 
+        @as_incr
+        M=M+1
+        @16
+        D=A
+        @as_incr
+        D=D-M //16 - as_incr
+
+        @as_resetBufLoop
+        D;JNE//if not 16, loop
+
+    //all input registers should now be -1
+    //=====
     @as_userInput
-    M=-1 //resets user input
+    M=0 //resets user input
 
     @ge_currentColumn
     M=0 //resets current column
@@ -267,6 +270,60 @@ M=0
         A=M
         0;JMP
 //END OF as_clearBuf
+
+(kp_outputKey)
+    @kp_return
+    A=M
+    0;JMP
+
+(cz_addBuf)
+//created by Caroline and Aiden
+//as_userInput holds the value user has entered (0 or 1)
+//ge_currentColumn is going to hold the value of the column that has just been output,
+//this program will take that value that has been output, store it into the corresponding R#
+//then increment ge_currentColumn
+//then return to as_getKey
+
+
+//first set what we are adding, either 0 or 1
+//as_userInput will be either 48 or 49
+//so we subtract 48 from as_userInput and store in as_toBuf
+    @as_userInput
+    D=M
+    @48
+    D=D-A
+    @as_toBuf
+    M=D
+    //now as_toBuf will either be 1 or 0
+    @0
+    D=A
+    @as_currentBuf
+    M=D //as_currentBuf = R0
+
+    //now increment based on ge_currentColumn
+    @as_currentBuf
+    D=M
+    @ge_currentColumn
+    D=D+M //now we have access to register pertaining to column
+    //A register currently holds contents of R#, we need store as_userInput into R#
+   //M[A] = # is how we store input into R#
+    @cz_holdPlace //holds pointer of R#
+    M=D
+
+    @as_toBuf 
+    D=M
+    @cz_holdPlace
+    A=M
+    M=D //take user input and store into R#
+    
+    //now we have stored user input into correct register
+    //now increment ge_currentColumn then return
+
+    @ge_currentColumn
+    M=M+1
+
+    @as_getKey
+    0;JMP //returns to receive another user input
 
 (END)
     @END
