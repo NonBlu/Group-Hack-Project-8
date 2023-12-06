@@ -1,66 +1,177 @@
-//Your program will accept only six keys from the keyboard:  0, 1, Enter, Backspace, c, and q 
-//(Note: Enter is ASCII decimal 128 and Backspace is ASCII decimal 129). Any other input will be ignored.
-//
-//Your program will accept and display 16 binary digits (although the user can Backspace at any point to
-// make corrections) followed by an Enter. If a Backspace is input, then the previous input digit will be
-// erased (on the display and optionally in memory). If more than 16 bits are entered, then anything
-// after 16 will be ignored (and not displayed). If c is entered at any time, then the entire line 
-//(and optionally in memory) will be cleared. If q is entered at any time, then your program will clear
-// the line and terminate (i.e. go into an infinite loop) immediately.
-//
-//Once the Enter is received after the 16 binary digits, your program will output a right arrow (a minus
-// - followed by greater than >) followed by the decimal equivalent (with a + for positive numbers,
-// including zero,  and a - for negative numbers and NO leading spaces) and will then wait for an Enter
-// (ignoring any other input except c for clear and q for quit). Once an Enter is received, the displayed
-// line will be cleared and your program will wait for new binary digit input
+//========================================================================================================
+// Bin2Dec.asm
+//========================================================================================================
+// Created by: Aiden Sallows, Aidan Ramirez, Caroline Zheng, Koki Pettigrew
+//========================================================================================================
+// The purpose of this function is to receive a 16 digit binary number in 2's complement.
+// The program will then convert this binary value to a decimal value
+// The decimal value will also be preceeded by a +/- to indicicate whether it is positive or negative. 
+// The user can enter on of the following keys:
+// 1 - enters a 1 into the program. Can only be done if less than 16 binary digits have been entered.
+// 0 - enters a 0 into the program. Can only be done if less than 16 binary digits have been entered.
+// c - clears the screen, resetting the process of entering a binary number.
+// q - clears the screen and ends the program.
+// enter - can only be used once all 16 binary digits have been entered. This executes the conversion
+//         of the binary number to decimal. If pressed again after this, it will reset the program
+//         back to the beginning
+//=======================================================================================================
 
+//=======================================================================================================
+// Variables
+// ge_currentColumn  - Tracks the cursor/column
+// as_processBufBool - Determines whether or not the buffer has been processed. 
+//                     Used for enter key parsing
+// as_userInput      - Stores the ASCII value of the key the user has entered
+//=======================================================================================================
 
-//One group needs to handle user input, and storing into R0 through R15
-//The other needs to handle receiving from R0 through R15 and displaying result
-//One member does input validation
-//One member does input storage
-//One member does conversion to decimal
-//One member outputs to program
-
-
-
-//first step is grab input validation 
-//recieve input
-//input validation
-//if correct input, display on screen
-//or do command
-
-
-//=================================================
-//Functions that still need to be completed:
-//kp_output
-//cz_delBuf
-//cz_addBuf
-//ar_processBuf
-//
-//===============================================
-@ge_currentColumn //tracks cursor
+//Variable Initialization
+@ge_currentColumn 
 M=0
 
-@as_processBufBool //boolean that is equal to 1 if processBuf function has been executed
+@as_processBufBool
 M=0
 
-//TESTTTT
+//Sets the function call to return to main once completed
+@main
+D=A
+@as_mainReturn
+M=D
 
-// @SCREEN
-// D=A
-// @dot
-// M=D
-// @32
-// M=D+A
-// @dot
-// A=M
-// M=-1
+//Execute as_getKey function
+@as_getKey
+0;JMP
 
+//=======================================================================================================
+// main
+//=======================================================================================================
+// Contains parsing statements that determine which function to execute, depending on the key the
+// user entered. 
+//=======================================================================================================
+(main)
+    //first check if ge_currentColumn is <=15
+    //This is to determine if the user has already entered in 16 bits 
+    @ge_currentColumn
+    D=M
+    @15
+    D=A-D // 16 - (any num <= 16) will be >= 0
 
-//First loop waits for input to be non zero
-//second loop waits for input to be zero
+    //Calls the as_checkOneZero function if bits <= 16
+    @as_checkOneZero
+    D;JGE 
 
+    //ELSE bits are greater than 16 entered OR entry was not a 0 or 1
+    (as_continueInputValidation)
+        //Now we check to see if a backspace was entered
+        //if so, execute cz_backspace
+        @as_getKey //if input is a 129, call cz_delBuf, then return to as_getKey
+        D=A
+        @cz_return
+        M=D //kp_return will now return to as_getKey
+
+        @129
+        D=A
+        @as_userInput
+        D=M-D //129-129 = 0
+        @cz_delBuf
+        D;JEQ
+
+        //Else, backspace has not been entered
+
+        //now check if c has been entered
+        //if input is a 67, call as_clearBuf, then return to as_getKey
+        @as_getKey 
+        D=A
+        @as_return
+        M=D //kp_return will now return to as_getKey
+
+        @67
+        D=A
+        @as_userInput
+        D=M-D //67-67 = 0
+        @as_clearBuf
+        D;JEQ //executes jump if input is 67
+
+        //Else, c has not been entered
+        
+        //now check if q has been entered
+        //if input is a 81, call as_clearBuf, then end the program
+        @END 
+        D=A
+        @as_return
+        M=D //as_return will now return to as_getKey
+
+        @81
+        D=A
+        @as_userInput
+        D=M-D //81-81 = 0
+        @as_clearBuf
+        D;JEQ //executes jump if input is 81
+
+        //Else, q has not been entered
+
+        //Now check to see if bits = 16 and enter has been pressed (input 128)
+
+        //first check if bits is 16 or greater
+        //if bits is not 16 or greater, return back to as_getKey
+
+        @ge_currentColumn
+        D=M
+        @16
+        D=A-D
+        @as_getKey
+        D;JGT //executes if bits is not 16 or greater
+
+        //Else, bits must be 16, which means we check for enter key
+        //if enter key has not been pressed, return back to as_getKey
+        @128
+        D=A
+        @as_userInput
+        D=M-D //userinput-128 = 0
+        @as_getKey
+        D;JNE //executes jump if input is not enter
+
+        //This must mean bits is 16 and enter key has been pressed!
+        
+        //Now we check to see if buf has already been processed.
+        //if as_processBufBool = 1, then set it to 0 and execute as_clearBuf
+        @as_getKey 
+        D=A
+        @as_return
+        M=D //as_return will now return to as_getKey
+
+        @as_processBufBool
+        D=M
+
+        @as_clearBuf
+        D;JGT 
+        //ELSE, buffer has not been processed
+        //Now we call processBuf
+
+        //Set the return of ar_processBuf to kp_outputAll
+        //This will then cause the converted decimal number
+        // to be output to the screen
+        @kp_outputAll
+        D=A
+        @ar_return
+        M=D //ar_return will now return to kp_outputAll
+
+        //call ar_processBuf!
+        @ar_processBuf
+        0;JMP 
+//========================================================================================================
+// as_getKey
+//========================================================================================================
+// Created by: Aiden Sallows
+//========================================================================================================
+// Scans the keyboard for a user input.
+// @KBD will always equal 0 unless the user pressed a key.
+// The first loop will break when it detects a keyboard value being entered
+// The second loop will break when it detects that a key is no longer being pressed.
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// as_userInput - stores the ASCII value of the character the user has entered.
+//=======================================================================================================
 (as_getKey) //infinite loop that runs until a valid input is pressed
     @KBD    // get value of keyboard
     D=M
@@ -76,115 +187,29 @@ M=0
         @KBD
         D=M
 
+        //once the keyboard is detected as 0, this loop will break
         @as_releaseKey
         D;JNE
-    //user has entered a key, must now validaate input
-
-    //if statements to validate input
-    //first check if ge_currentColumn is <=15 
-    @ge_currentColumn
-    D=M
-    @15
-    D=A-D //if 15 bits entered, will be 0.This is because current column is 15
-          //if current column is 16, then this means no more inputs can occur.
-          //this is represented as D<0
-    @as_checkOneZero
-    D;JGE //executes if bits <=16. jumps if greater than or equal to 0
-
-    //ELSE bits are greater than 16 entered OR entry was not a 0 or 1
-    (as_continueInputValidation)
-    //Now we check to see if a backspace was entered
-    //if so, execute cz_backspace
-        @as_getKey //if input is a 129, call cz_delBuf, then return to as_getKey
-        D=A
-        @cz_return
-        M=D //kp_return will now return to as_getKey
-
-        @129
-        D=A
-        @as_userInput
-        D=M-D //129-129 = 0
-        @cz_delBuf
-        D;JEQ //executes jump if input is 129
-        //Else, backspace has not been entered
-
-        //now check if c has been entered
-        @as_getKey //if input is a 67, call as_clearBuf, then return to as_getKey
-        D=A
-        @as_return
-        M=D //kp_return will now return to as_getKey
-
-        @67
-        D=A
-        @as_userInput
-        D=M-D //67-67 = 0
-        @as_clearBuf
-        D;JEQ //executes jump if input is 67
-
-        //Else, c has not been entered
-        
-        //now check if q has been entered
-        @END //if input is a 81, call as_clearBuf, then end the program
-        D=A
-        @as_return
-        M=D //kp_return will now return to as_getKey
-
-        @81
-        D=A
-        @as_userInput
-        D=M-D //81-81 = 0
-        @as_clearBuf
-        D;JEQ //executes jump if input is 81
-
-        //Else, q has not been entered
-
-        //Now check to see if bits = 16 and enter has been pressed (input is 128)
-
-        //first check if bits is 16
-        //if bits is not 16, return back to as_getKey
-
-        @ge_currentColumn
-        D=M
-        @16
-        D=A-D
-        @as_getKey
-        D;JNE //executes if bits is not 16
-
-        //Then, bits must be 16, which means we check for enter key
-        @128
-        D=A
-        @as_userInput
-        D=M-D //userinput-128 = 0
-        @as_getKey
-        D;JNE //executes jump if input is not enter
-
-        //This must mean bits is 16 and enter key has been pressed!
-        
-        //Now we check to see if buf has already been processed.
-        //if as_processBufBool = 1, then set it to 0 and clear buf
-        //else set it to 1 and proceed
-
-        @as_processBufBool
-        D=M
-
-        @as_restart
-        D;JGT //if as_processBufBool is greater than 0 (1), 
-              //then restart program by clearing buf, restarting cols, set processbufbool to 0 and jumping to getKey
-
-        //ELSE, buffer has not been processed
-        //Now we call processBuf
-        @as_processBufBool
-        M=1 //bool that indicates processBuf has occured
-
-        @kp_outputAll //then outputs all decimal values
-        D=A
-        @ar_return
-        M=D //ar_return will now return to as_getKey
-
-        @ar_processBuf
-        0;JMP //jump to process buf!
-
+    
+    //return to main!
+    @as_mainReturn
+    A=M
+    0;JMP
+//========================================================================================================
+// ar_processBuf
+//========================================================================================================
+// Created by: Aidan Ramirez
+//========================================================================================================
+// 
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+//
+//=======================================================================================================
 (ar_processBuf)
+    @as_processBufBool
+    M=1 //bool that indicates processBuf has occured
+
     @ar_decSign
     M=1
     @6
@@ -213,120 +238,186 @@ M=0
     @ar_return
     A=M
     0;JMP
-
-    (as_checkOneZero) //checks if userInput is 48 or 49 
+//========================================================================================================
+// as_checkOneZero
+//========================================================================================================
+// Created by: Aiden Sallows, Koki Pettigrew
+//========================================================================================================
+// Determines whether the value entered by the user is a 0 or a 1.
+// if 0: execute ge_output_0 and then proceed to cz_addBuf
+// if 1: execute ge_output_1 and then proceed to cz_addBuf
+// else: return back to as_continueInputValidation
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// as_userInput - stores the ASCII value of the character the user has entered.
+//=======================================================================================================
+(as_checkOneZero) //checks if userInput is 48 or 49 
                       //worked on by Aiden and Koki
-        @cz_addBuf //if input is a 48, call kp_outputKey
-        D=A
-        @ge_output_return
-        M=D //kp_return will now return to cz_addBuf
+    @cz_addBuf //if input is a 48, call kp_outputKey
+    D=A
+    @ge_output_return
+    M=D //kp_return will now return to cz_addBuf
 
-        @48
-        D=A
-        @as_userInput
-        D=M-D //48-48 = 0
-        @ge_output_0
-        D;JEQ //executes jump if input is 48 (48 equals 0)
+    @48
+    D=A
+    @as_userInput
+    D=M-D //48-48 = 0
+    @ge_output_0
+    D;JEQ //executes jump if input is 48 (48 equals 0)
         
-        //ELSE
-        //execute if equal to 49
-        D=D-1 //if it is 1, now it is 0
-        @ge_output_1
-        D;JEQ //executes jump if input was 49
+    //ELSE
+    //execute if equal to 49
+    D=D-1 //if it is 1, now it is 0
+    @ge_output_1
+    D;JEQ //executes jump if input was 49
 
-        //ELSE input was not 0 or 1, jump to continue input validation
-        @as_continueInputValidation
-        0;JMP
-    
-(as_restart) //this function will clear buffer, set processbufbool to 0, and return to key
+    //ELSE input was not 0 or 1, jump to continue input validation
+    @as_continueInputValidation
+    0;JMP
+
+//========================================================================================================
+// as_clearBuf
+//========================================================================================================
+// Created by: Aiden Sallows
+//========================================================================================================
+// Clears the screen and returns the cursor back to the beginning
+// This is done through a decrementing loop
+// Once finished, screen will be blank, and ge_currentColumn = 0
+// Sets as_processBufBool = 0
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// ge_currentColumn  - Tracks the cursor/column
+// as_processBufBool - Determines whether or not the buffer has been processed. 
+//                     Used for enter key parsing
+//=======================================================================================================
+(as_clearBuf)   
+    //set back to 0 to indicate buffer has not been processed
     @as_processBufBool
     M=0
 
-    @as_getKey 
-    D=A
-    @as_return
-    M=D //as_return will now return to as_getKey
-
-    @as_clearBuf
-    0;JMP //executes jump to clear buf, function will return to getKey when done
-
-(as_clearBuf)   //Just need to set cursor back to 0
-                //do this by decrementing then outputting blanks
+    //Loop
+    //This loop will continue until ge_currentColumn is less than 0
+    //As it runs, it will output a blank in the current column, 
+    // and then decrement the column
     (as_clearBufLoop)
+        //execute ge_output_s function to output a blank
         @as_clearBufLoopCont
         D=A
         @ge_output_return
         M=D
         @ge_output_s
-        0;JMP //execute eaton function to output a blank
+        0;JMP 
 
         (as_clearBufLoopCont)
+        //then decrement current column
         @ge_currentColumn
         M=M-1
         D=M
         @as_clearBufLoop
-        D;JGE//if greater or equal to 0, loop
+        D;JGE//Breaks when ge_currentColumn < 0
 
+    //incremement ge_currentColumn back to 0 since it is -1 right now
     @ge_currentColumn
-    M=M+1 //incremement back to 0 since it is -1 right now
+    M=M+1 
 
+    //reset user input
     @as_userInput
-    M=0 //resets user input
+    M=0 
 
-    @as_return //return
+    @as_return
     A=M
     0;JMP
-//END OF as_clearBuf
 
+//========================================================================================================
+// cz_addBuf
+//========================================================================================================
+// Created by: Caroline Zheng, Aiden Sallows
+//========================================================================================================
+// Receives the ASCII value entered by the user.
+// It will then convert this value into binary.
+// Then, using a pointer that points to R0, and incrementing this pointer by ge_currentColumn
+// we will store the binary value entered by the 0 into its respective register (R0-R15)
+// Finally, it will increment ge_currentColumn
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// as_userInput      - stores the ASCII value of the character the user has entered.
+// ge_currentColumn  - Tracks the cursor/column.
+// as_processBufBool - Determines whether or not the buffer has been processed. 
+//                     Used for enter key parsing.
+// as_currentBuf     - Pointer variable used to traverse R0-R15 registers.
+// cz_holdPlace      - holds the current location of the register that will be modified.
+//=======================================================================================================
 (cz_addBuf)
-//created by Caroline and Aiden
-//as_userInput holds the value user has entered (0 or 1)
-//ge_currentColumn is going to hold the value of the column that has just been output,
-//this program will take that value that has been output, store it into the corresponding R#
-//then increment ge_currentColumn
-//then return to as_getKey
 
-
-//first set what we are adding, either 0 or 1
-//as_userInput will be either 48 or 49
-//so we subtract 48 from as_userInput and store in as_toBuf
+    //Convert ASCII value to binary
+    //This is done by subtracting 48 from the ASCII value
+    //If the ASCII value is 49, then the binary value is 1
+    //If the ASCII value is 48, then the binary value is 0
     @as_userInput
     D=M
     @48
     D=D-A
     @as_toBuf
     M=D
-    //now as_toBuf will either be 1 or 0
+    
+    //Initialize as_currentBuf pointer to point at R0
     @0
     D=A
     @as_currentBuf
-    M=D //as_currentBuf = R0
+    M=D 
 
-    //now increment based on ge_currentColumn
+    //now increment this pointer based on ge_currentColumn
     @as_currentBuf
     D=M
     @ge_currentColumn
-    D=D+M //now we have access to register pertaining to column
+    D=D+M 
+    //now we have access to register pertaining to column
     //A register currently holds contents of R#, we need store as_userInput into R#
-   //M[A] = # is how we store input into R#
-    @cz_holdPlace //holds pointer of R#
+    //M[A] = # is how we store input into R#
+
+    //holds pointer of R#
+    @cz_holdPlace 
     M=D
 
+    //take user input and store into R#
     @as_toBuf 
     D=M
     @cz_holdPlace
     A=M
-    M=D //take user input and store into R#
+    M=D 
     
     //now we have stored user input into correct register
     //now increment ge_currentColumn then return
-
     @ge_currentColumn
     M=M+1
 
     @as_getKey
-    0;JMP //returns to receive another user input
-
+    0;JMP
+//========================================================================================================
+// kp_outputAll
+//========================================================================================================
+// Created by: Koki Pettigrew
+//========================================================================================================
+// Outputs the decimal value of the converted binary number.
+// this will be represented as so:
+// ->SXXXXXX
+// S : the sign of the decimal value
+// X : the decimal value 
+// It will then return to as_getKey
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// ge_currentColumn  - Tracks the cursor/column.
+// ar_decSign        - sign value of the decimal number
+// ar_decTenThous    - ten thousands place of the decimal number
+// ar_decThous       - thousands place of the decimal number
+// ar_decHund        - hun
+// ar_decTens
+// ar_decOnes
+//=======================================================================================================
 (kp_outputAll)
 
     @16
