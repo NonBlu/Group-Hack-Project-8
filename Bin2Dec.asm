@@ -263,12 +263,16 @@ M=D
 // The function detects whether a 1 or 0 value is present, where a value of 1 adds its respective decimal
 // value into a single variable named input. Negative variables and special cases are accounted for with 
 // the use of if-statements and 2's complement. The function will output the correct single binary word 
-// from these single inputs through the variable R16. 
+// from these single inputs through the variable ar_decimalWord. 
 //=======================================================================================================
 // Variables
 //=======================================================================================================
 // ar_input - single binary word that accumulates the values stored in the inputs, later to be transferred
 //            into R16
+//  ar_decNegativeBool - marker to determine whether a change regarding a negative binary number must 
+//                       be completed
+// ar_decimalWord - output for the function. Input is assigned to this variable once all of the changes
+                    have occured, meaning the word is complete and ready for conversion.
 //=======================================================================================================
 (ar_processBuf)
     @ar_input
