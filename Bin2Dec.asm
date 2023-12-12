@@ -83,15 +83,6 @@ M=D
     //ELSE bits are greater than 16 entered OR entry was not a 0 or 1
     (as_continueInputValidation)
         //Now check to see if backspace is entered
-
-        //if ge_currentColumn == 0, then jump to getKey
-
-        @ge_currentColumn
-        D=M
-        @as_getKey
-        D;JEQ
-
-        //else, a backspace can be made
         @129
         D=A
         @as_userInput
@@ -239,6 +230,13 @@ M=D
 (cz_delBuf)
     //checks to see if buffer has been processed
     //if it has, do nothing and get new key
+    //if ge_currentColumn == 0, then jump to getKey
+
+    @ge_currentColumn
+    D=M
+    @as_getKey
+    D;JEQ
+    
     @as_processBufBool
     D=M
 
