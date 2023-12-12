@@ -31,6 +31,27 @@ M=0
 @as_processBufBool
 M=0
 
+@ar_input
+M=0
+    //initialize variables
+    @ar_decSign
+    M=0
+
+    @ar_decTenThous
+    M=0
+
+    @ar_decThous
+    M=0
+
+    @ar_decHund
+    M=0
+
+    @ar_decTens
+    M=0
+
+    @ar_decOnes
+    M=0
+
 //Sets the function call to return to main once completed
 @main
 D=A
@@ -61,13 +82,16 @@ M=D
 
     //ELSE bits are greater than 16 entered OR entry was not a 0 or 1
     (as_continueInputValidation)
-        //Now we check to see if a backspace was entered
-        //if so, execute cz_backspace
-        @as_getKey //if input is a 129, call cz_delBuf, then return to as_getKey
-        D=A
-        @cz_return
-        M=D //kp_return will now return to as_getKey
+        //Now check to see if backspace is entered
 
+        //if ge_currentColumn == 0, then jump to getKey
+
+        @ge_currentColumn
+        D=M
+        @as_getKey
+        D;JEQ
+
+        //else, a backspace can be made
         @129
         D=A
         @as_userInput
@@ -196,6 +220,43 @@ M=D
     A=M
     0;JMP
 //========================================================================================================
+// cz_delBuf
+//========================================================================================================
+// Created by: Caroline Zheng
+//========================================================================================================
+// Once a backspace has been received from the user, this function will execute.
+// The function will check if buffer has been processed. If it has, then the program will return back
+// to as_getKey.
+// Else, decrement ge_currentColumn and output a blank!
+// Then, return to as_getKey
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// ge_currentColumn  - Tracks the cursor/column
+// as_processBufBool - Determines whether or not the buffer has been processed. 
+//                     Used for enter key parsing
+//=======================================================================================================
+(cz_delBuf)
+    //checks to see if buffer has been processed
+    //if it has, do nothing and get new key
+    @as_processBufBool
+    D=M
+
+    @as_getKey
+    D;JGT
+ 
+    @ge_currentColumn
+    //Decrements Column
+    M=M-1
+
+    @as_getKey //set return to cz_return
+    D=A
+    @ge_output_return
+    M=D
+
+    @ge_output_s
+    0;JMP //Execute eaton function to output a blank
+//========================================================================================================
 // ar_processBuf
 //========================================================================================================
 // Created by: Aidan Ramirez
@@ -207,37 +268,1155 @@ M=D
 //
 //=======================================================================================================
 (ar_processBuf)
+    @ar_input
+    M=0
+
+    //check if sign is negative.
+    //if it is negative, set @as_decNegativeBool to 1
+    //else, have it be 0
+    @as_decNegativeBool
+    M=0
+
+    //Check R0 to see the binary is positive or negative
+    @R0
+    D=M
+    //If it is 0 jump to ar_add_16384
+    @ar_Add_32768
+    D;JEQ
+
+    //Else, we are dealing with a negative number
+    @as_decNegativeBool
+    M=1
+    (ar_Add_32768)
+
+        //Check if R1 has a value of 1
+        // If not, jump straight to Add_16384, there is no value here
+        
+        @R0
+        D=M
+        @ar_Add_16384
+        D;JEQ
+
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_32768
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @16384
+        D=-A
+        @ar_input
+        M=D+M
+        @16384
+        D=-A
+        @ar_input
+        M=D+M //do double because 16384 + 16384 = 32768 
+
+        @as_decNegativeBool
+        M=0
+    
+        //continue to 16384
+        @ar_Add_16384
+        0;JMP
+
+        (as_positive_Add_32768)
+        // @16384
+        // D=A
+        // @ar_input
+        // M=D+M
+
+        //continue to 16384
+        @ar_Add_16384
+        0;JMP
+    
+    (ar_Add_16384)
+
+        //Check if R1 has a value of 1
+        // If not, jump straight to Add_8192, there is no value here
+        
+        @R1
+        D=M
+        @ar_Add_8192
+        D;JEQ
+
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_16384
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @16384
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+    
+        //continue to 8192
+        @ar_Add_8192
+        0;JMP
+
+        (as_positive_Add_16384)
+        @16384
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 8192
+        @ar_Add_8192
+        0;JMP
+
+    (ar_Add_8192)
+        //Check if R2 has a value of 1
+        // If not, jump straight to Add_8192, there is no value here
+        
+        @R2
+        D=M
+        @ar_Add_4096
+        D;JEQ
+
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_8192
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @8192
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 4096
+        @ar_Add_4096
+        0;JMP
+
+        (as_positive_Add_8192)
+        
+        // Else, add equivalent amount to ar_input
+        
+        @8192
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 4096
+        @ar_Add_4096
+        0;JMP
+
+
+    (ar_Add_4096)
+    //Check if R3 has a value of 1
+        // If not, jump straight to Add_2048, there is no value here
+        
+        @R3
+        D=M
+        @ar_Add_2048
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_4096
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @4096
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 2048
+        @ar_Add_2048
+        0;JMP
+
+        (as_positive_Add_4096)
+        // Else, add equivalent amount to ar_input
+        @4096
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 2048
+        @ar_Add_2048
+        0;JMP
+
+
+
+    (ar_Add_2048)
+        //Check if R4 has a value of 1
+        // If not, jump straight to Add_512, there is no value here
+        
+        @R4
+        D=M
+        @ar_Add_1024
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_2048
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @2048
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 1024
+        @ar_Add_1024
+        0;JMP
+
+        (as_positive_Add_2048)
+        // Else, add equivalent amount to ar_input
+        @2048
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 1024
+        @ar_Add_1024
+        0;JMP
+
+
+    (ar_Add_1024)
+        //Check if R5 has a value of 1
+        // If not, jump straight to Add_512, there is no value here
+        
+        @R5
+        D=M
+        @ar_Add_512
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_1024
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @1024
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 512
+        @ar_Add_512
+        0;JMP
+
+        (as_positive_Add_1024)
+        // Else, add equivalent amount to ar_input
+        @1024
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 512
+        @ar_Add_512
+        0;JMP
+
+
+    (ar_Add_512)
+        //Check if R6 has a value of 1
+        // If not, jump straight to Add_256, there is no value here
+        
+        @R6
+        D=M
+        @ar_Add_256
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_512
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @512
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 256
+        @ar_Add_256
+        0;JMP
+
+        (as_positive_Add_512)
+        // Else, add equivalent amount to ar_input
+        @512
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 256
+        @ar_Add_256
+        0;JMP
+
+    (ar_Add_256)
+        //Check if R7 has a value of 1
+        // If not, jump straight to Add_128, there is no value here
+        
+        @R7
+        D=M
+        @ar_Add_128
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_256
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @256
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 128
+        @ar_Add_128
+        0;JMP
+
+        (as_positive_Add_256)
+        // Else, add equivalent amount to ar_input
+        @256
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 128
+        @ar_Add_128
+        0;JMP
+
+
+    (ar_Add_128)
+        //Check if R8 has a value of 1
+        // If not, jump straight to Add_64, there is no value here
+        
+        @R8
+        D=M
+        @ar_Add_64
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_128
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @128
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 64
+        @ar_Add_64
+        0;JMP
+
+        (as_positive_Add_128)
+        // Else, add equivalent amount to ar_input
+        @128
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 64
+        @ar_Add_64
+        0;JMP
+
+
+    (ar_Add_64)
+    //Check if R9 has a value of 1
+        // If not, jump straight to Add_32, there is no value here
+        
+        @R9
+        D=M
+        @ar_Add_32
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_64
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @64
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 32
+        @ar_Add_32
+        0;JMP
+
+        (as_positive_Add_64)
+        // Else, add equivalent amount to ar_input
+        @64
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 32
+        @ar_Add_32
+        0;JMP
+
+    (ar_Add_32)
+        //Check if R10 has a value of 1
+        // If not, jump straight to Add_16, there is no value here
+        
+        @R10
+        D=M
+        @ar_Add_16
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_32
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @32
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 16
+        @ar_Add_16
+        0;JMP
+
+        (as_positive_Add_32)
+        // Else, add equivalent amount to ar_input
+        @32
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 16
+        @ar_Add_16
+        0;JMP
+
+    (ar_Add_16)
+    //Check if R11 has a value of 1
+        // If not, jump straight to Add_8, there is no value here
+        
+        @R11
+        D=M
+        @ar_Add_8
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_16
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @16
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 8
+        @ar_Add_8
+        0;JMP
+
+        (as_positive_Add_16)
+        // Else, add equivalent amount to ar_input
+        @16
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 8
+        @ar_Add_8
+        0;JMP
+
+    (ar_Add_8)
+        //Check if R12 has a value of 1
+        // If not, jump straight to Add_4, there is no value here
+        
+        @R12
+        D=M
+        @ar_Add_4
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_8
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @8
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 4
+        @ar_Add_4
+        0;JMP
+
+        (as_positive_Add_8)
+        // Else, add equivalent amount to ar_input
+        @8
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 4
+        @ar_Add_4
+        0;JMP
+
+    (ar_Add_4)
+        //Check if R13 has a value of 1
+        // If not, jump straight to Add_2, there is no value here
+        
+        @R13
+        D=M
+        @ar_Add_2
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_4
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @4
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 2
+        @ar_Add_2
+        0;JMP
+
+        (as_positive_Add_4)
+        // Else, add equivalent amount to ar_input
+        @4
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 2
+        @ar_Add_2
+        0;JMP
+
+
+    (ar_Add_2)
+        //Check if R14 has a value of 1
+        // If not, jump straight to Add_1, there is no value here
+        
+        @R14
+        D=M
+        @ar_Add_1
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_2
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @2
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to 1
+        @ar_Add_1
+        0;JMP
+
+        (as_positive_Add_2)
+        // Else, add equivalent amount to ar_input
+        @2
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to 1
+        @ar_Add_1
+        0;JMP
+
+
+    (ar_Add_1)
+        //Check if R15 has a value of 1
+        // If not, jump straight to SORTDEC, there is no value here
+        
+        @R15
+        D=M
+        @ar_CheckSignBit
+        D;JEQ
+        //Check to see if leading nonzero bit has been negated
+        //if yes, skip
+        //else, negate value and set as_decNegativeBool to 1
+        @as_decNegativeBool
+        D=M
+        @as_positive_Add_1
+        D;JEQ //if value is 1, means we must negate.
+        
+        //Else, negate input and add to value
+        @1
+        D=-A
+        @ar_input
+        M=D+M
+        @as_decNegativeBool
+        M=0
+        //continue to ar_CheckSignBit
+        @ar_CheckSignBit
+        0;JMP
+
+        (as_positive_Add_1)
+        // Else, add equivalent amount to ar_input
+        @1
+        D=A
+        @ar_input
+        M=D+M
+
+        //continue to SORTDEC
+        @ar_CheckSignBit
+        0;JMP
+
+    (ar_CheckSignBit)
+
+        //Check R0 to see the binary is positive or negative
+        @R0
+        D=M
+        //If it is 0 jump to ENTER_R16
+        @ar_ENTER_R16
+        D;JEQ
+
+        //Check for special case
+        @ar_input
+        D=M
+        
+        //If equal to zero, jump to special case
+        @ar_SpecialCase
+        D;JEQ
+        
+        //Else begin 2's complement on ar_input
+
+        // 1's complement
+        // @ar_input 
+        // D=M
+        // D=-D
+        // M=D
+        //     //Add 1
+        // @ar_input 
+        // M=M+1
+        
+        //Jump to ENTER_R16
+        @ar_ENTER_R16
+        0;JMP
+
+    (ar_SpecialCase)
+        @16384
+        D=-A
+        
+        @ar_decimalWord
+        M=D
+        
+        @16384
+        D=-A
+
+        @ar_decimalWord
+        M=D+M
+
+        @as_splitDecimalWord
+        0;JMP
+
+
+    (ar_ENTER_R16)
+        @ar_input 
+        D=M
+        @ar_decimalWord
+        M=D
+
+    //Now our decimal word has been stored in ar_decimalWord
+
+//========================================================================
+    (as_splitDecimalWord)
     @as_processBufBool
     M=1 //bool that indicates processBuf has occured
 
+    //initialize variables
     @ar_decSign
-    M=1
-    @6
-    D=A
+    M=0
+
     @ar_decTenThous
-    M=D
-    @4
-    D=A
+    M=0
+
     @ar_decThous
-    M=D
-    @3
-    D=A
+    M=0
+
     @ar_decHund
-    M=D
+    M=0
 
-    @9
-    D=A
     @ar_decTens
-    M=D
+    M=0
 
-    @4
-    D=A
     @ar_decOnes
-    M=D
+    M=0
 
+    //evaluate decimalword value
+    @ar_decimalWord
+    D=M
+
+    //if dividend is 0, end program.
     @ar_return
     A=M
-    0;JMP
+    D;JEQ
+
+    //else check if dividend is negative
+    @ar_BeginDiv //jump if decimal word is greater than 0
+    D;JGT
+
+    //Else it must be negative
+    @ar_decSign
+    M=1 //now indicates that decimal word is negative
+    @ar_decimalWord
+    M=-M //temp word is now positive
+
+    (ar_BeginDiv)
+        //Dividend is always going to be positive
+        //Set divisor to 10,000 then store quotiant into ar_decTenThous
+        //then set dividend = remainder and lower divisor by one dec place
+        //repeat
+        @ar_quotient
+        M=0 //quotient = 0
+
+        @ar_decimalWord
+        D=M
+        @ar_dividend
+        M=D //ar_dividend = ar_tempWord
+
+        @10000
+        D=A
+        @ar_divisor
+        M=D //ar_divisor = 10000
+
+        @ar_decTenThousAlgo
+        D=A
+        @as_algoReturn
+        M=D //set as_algoReturn to ar_decTenThousAlgo
+
+        @as_ALGO1
+        0;JMP
+
+        (ar_decTenThousAlgo)
+            //right now ar_quotient holds value of ar_decTenThous
+            //compute:
+            //ar_decTenThous = ar_quotient
+            //ar_quotient = 0
+            //ar_dividend = ar_remainder
+            //ar_divisor = 1000
+            //call algo 1
+            @ar_quotient
+            D=M
+            @ar_decTenThous
+            M=D //ar_decTenThous = ar_quotient
+
+            @ar_quotient
+            M=0 //ar_quotient = 0
+
+            @ar_remainder
+            D=M
+            @ar_dividend
+            M=D //ar_dividend = ar_remainder
+
+            @1000
+            D=A
+            @ar_divisor
+            M=D //ar_divisor = 1000
+
+            @ar_decThousAlgo
+            D=A
+            @as_algoReturn
+            M=D //set as_algoReturn to ar_decTenThousAlgo
+
+            @as_ALGO1
+            0;JMP
+
+        (ar_decThousAlgo)
+            //right now ar_quotient holds value of ar_decThous
+            //compute:
+            //ar_decThous = ar_quotient
+            //ar_quotient = 0
+            //ar_dividend = ar_remainder
+            //ar_divisor = 1000
+            //call algo 1
+            @ar_quotient
+            D=M
+            @ar_decThous
+            M=D //ar_decThous = ar_quotient
+
+            @ar_quotient
+            M=0 //ar_quotient = 0
+
+            @ar_remainder
+            D=M
+            @ar_dividend
+            M=D //ar_dividend = ar_remainder
+
+            @100
+            D=A
+            @ar_divisor
+            M=D //ar_divisor = 100
+
+            @ar_decHundAlgo
+            D=A
+            @as_algoReturn
+            M=D //set as_algoReturn to ar_decHundAlgo
+
+            @as_ALGO1
+            0;JMP
+        (ar_decHundAlgo)
+            //right now ar_quotient holds value of ar_decHund
+            //compute:
+            //ar_decHund= ar_quotient
+            //ar_quotient = 0
+            //ar_dividend = ar_remainder
+            //ar_divisor = 10
+            //call algo 1
+            @ar_quotient
+            D=M
+            @ar_decHund
+            M=D //ar_decTenThous = ar_quotient
+
+            @ar_quotient
+            M=0 //ar_quotient = 0
+
+            @ar_remainder
+            D=M
+            @ar_dividend
+            M=D //ar_dividend = ar_remainder
+
+            @10
+            D=A
+            @ar_divisor
+            M=D //ar_divisor = 10
+
+            @ar_decTensAlgo
+            D=A
+            @as_algoReturn
+            M=D //set as_algoReturn to ar_decHundAlgo
+
+            @as_ALGO1
+            0;JMP
+        (ar_decTensAlgo)
+            //right now ar_quotient holds value of ar_decTens
+            //compute:
+            //ar_decTens = ar_quotient
+            //ar_decOnes = ar_remainder
+            @ar_quotient
+            D=M
+            @ar_decTens
+            M=D //ar_decTenThous = ar_quotient
+
+            @ar_remainder
+            D=M
+            @ar_decOnes
+            M=D
+            //Now done!
+            @ar_return
+            A=M
+            0;JMP
+
+
+(as_ALGO1)
+@ar_dividend
+D=M
+@ar_remainder
+M=D //store contents of dividend into remainder
+
+(as_ALGO1LOOP)
+    @ar_divisor
+    D=M //get divisor
+    @ar_remainder
+    M=M-D //remainder = remainder - divisor
+    @ar_quotient
+    M=M+1 //quotiant++
+
+    @ar_remainder
+    D=M
+    @as_ALGO1LOOP
+    D;JGT //loop while remainder is greater than 0
+
+    //else if remainder is negative, fix remainder
+    @ar_remainder
+    D=M
+    @as_ENDFUNC
+    D;JGE
+
+    //Else, fix
+    @ar_divisor
+    D=M //get divisor
+    @ar_remainder
+    M=D+M //remainder = remainder + divisor
+    @ar_quotient
+    M=M-1 //quotiant--
+
+    (as_ENDFUNC)
+        @as_algoReturn
+        A=M
+        0;JMP
+
+    //     // Hold TempR16 as the dividend
+    //     @ar_tempR16
+    //     D=M
+    //     @ar_dividend
+    //     M=D //dividend = decimal numner
+        
+    //     @10000
+    //     D=A
+    //     @ar_divisor
+    //     M=D //divisor = 10,000
+
+    //     @ar_DIV
+    //     0;JMP 
+
+    // (ar_NegDec)
+    //     @ar_decSign
+    //     M=1
+        
+    //     @ar_tempR16
+    //     D=M
+    //     D=-D 
+    //     M=D
+
+    // @ar_BeginDiv
+    // 0; JMP
+
+    // (ar_COMPLETE)
+    //     //See if a marker has been manipulated to see if the div has been successful
+    //     @ar_decTenThous
+    //     D=M
+        
+    //     @UPDATE_ar_decTenThous
+    //     D; JEQ 
+        
+    //     @ar_decThous_COMPLETED
+    //     D=M
+        
+    //     @UPDATE_ar_decThous
+    //     D; JEQ 
+        
+    //     @ar_decHund_COMPLETED
+    //     D=M
+        
+    //     @UPDATE_ar_decHund
+    //     D; JEQ 
+        
+    //     @ar_decTens_COMPLETED
+    //     D=M
+        
+    //     @UPDATE_ar_decTens
+    //     D; JEQ 
+        
+    //     @ar_decOnes_COMPLETED
+    //     D=M
+        
+    //     @UPDATE_ar_decOnes
+    //     D; JEQ 
+        
+        
+    // (UPDATE_ar_decTenThous)
+    //     //assign the quotient to this place
+    //     @ar_quotient
+    //     D=M
+        
+    //     @ar_decTenThous
+    //     M=D
+        
+    //     //mark completion
+    //     @ar_decTenThous_COMPLETED
+    //     M=1
+        
+    //     //Prepare for next division
+    //     //Update dividend with remainder
+    //     @ar_remainder
+    //     D=M
+        
+    //     @ar_dividend
+    //     M=D
+        
+    //     //Reset remainder
+    //     @ar_remainder
+    //     M=0
+        
+    //     //Change divisor 
+    //     @1000
+    //     D=A
+    //     @ar_divisor
+    //     M=D
+        
+    //     //QUOTIENT will reset in function, begin Div again
+        
+    //     @ar_DIV
+    //     0;JMP
+        
+    // (UPDATE_ar_decThous)
+    //     //assign the quotient to this place
+    //     @ar_quotient
+    //     D=M
+        
+    //     @ar_decThous
+    //     M=D
+        
+    //     //mark completion
+    //     @ar_decThous_COMPLETED
+    //     M=1
+        
+    //     //Prepare for next division
+    //     //Update dividend with remainder
+    //     @ar_remainder
+    //     D=M
+        
+    //     @ar_dividend
+    //     M=D
+        
+    //     //Reset remainder
+    //     @ar_remainder
+    //     M=0
+        
+    //     //Change divisor 
+    //     @100
+    //     D=A
+    //     @ar_divisor
+    //     M=D
+        
+    //     //QUOTIENT will reset in function, begin Div again
+        
+    //     @ar_DIV
+    //     0;JMP
+        
+    // (UPDATE_ar_decHund)
+    //     //assign the quotient to this place
+    //     @ar_quotient
+    //     D=M
+        
+    //     @ar_decHund
+    //     M=D
+        
+    //     //mark completion
+    //     @ar_decHund_COMPLETED
+    //     M=1
+        
+    //     //Prepare for next division
+    //     //Update dividend with remainder
+    //     @ar_remainder
+    //     D=M
+        
+    //     @ar_dividend
+    //     M=D
+        
+    //     //Reset remainder
+    //     @ar_remainder
+    //     M=0
+        
+    //     //Change divisor 
+    //     @10
+    //     D=A
+    //     @ar_divisor
+    //     M=D
+        
+    //     //QUOTIENT will reset in function, begin Div again
+        
+    //     @ar_DIV
+    //     0;JMP
+        
+    // (UPDATE_ar_decTens)
+    //     //assign the quotient to this place
+    //     @ar_quotient
+    //     D=M
+        
+    //     @ar_decTens
+    //     M=D
+        
+    //     //mark completion
+    //     @ar_decTens_COMPLETED
+    //     M=1
+        
+    //     //Prepare for next division
+    //     //Update dividend with remainder
+    //     @ar_remainder
+    //     D=M
+        
+    //     @ar_dividend
+    //     M=D
+        
+    //     //Reset remainder
+    //     @ar_remainder
+    //     M=0
+        
+    //     //Change divisor 
+    //     @1
+    //     D=A
+    //     @ar_divisor
+    //     M=D
+        
+    //     //QUOTIENT will reset in function, begin Div again
+        
+    //     @ar_DIV
+    //     0;JMP
+
+    // (UPDATE_ar_decOnes)
+    //     //assign the quotient to this place
+    //     @ar_quotient
+    //     D=M
+        
+    //     @ar_decTens
+    //     M=D
+        
+    //     //mark completion
+    //     @ar_decTens_COMPLETED
+    //     M=1
+        
+    //     //No need to extra divisions, jump to end
+    //     @ar_funcEnd
+    //     0;JMP
+
+    // (ar_DIV)   
+
 //========================================================================================================
 // as_checkOneZero
 //========================================================================================================
