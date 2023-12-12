@@ -1374,11 +1374,14 @@ M=D //store contents of dividend into remainder
 // ar_decSign        - sign value of the decimal number
 // ar_decTenThous    - ten thousands place of the decimal number
 // ar_decThous       - thousands place of the decimal number
-// ar_decHund        - hun
-// ar_decTens
-// ar_decOnes
+// ar_decHund        - hundreds place of the decimal number
+// ar_decTens        - tens place of the decimal number
+// ar_decOnes        - ones place of the decimal number
+// as_leadingZeroBool- initialized at 1, changes to 0 when it encounters a leading zero
 //=======================================================================================================
 (kp_outputAll)
+    @as_leadingZeroBool
+    M=0
 
     @16
     D=A
@@ -1429,10 +1432,8 @@ M=D //store contents of dividend into remainder
 
     (kp_tenThous)
 
-        @19
-        D=A
         @ge_currentColumn
-        M=D //sets column to 19
+        M=M+1 //sets column to 19
 
         @kp_thous
         D=A
@@ -1444,15 +1445,42 @@ M=D //store contents of dividend into remainder
         @kp_currentDec
         M=D //kp_currentDec = ar_decTenThous
 
+        //if (0){
+        //  if(bool) {
+        //      cout << 0
+        //  } else
+        //  { do nothing }
+        // }else {
+        // bool = 1    
+        //}
+
+        //d contains value
+        @as_checkOutputZeroTenThous
+        D;JEQ //if output is 0, check to see if its a leading zero
+
+        //ELSE
+        //Set as_leadingZeroBool to 1 and proceed
+        @as_leadingZeroBool
+        M=1
+
         @kp_outputDec
         0;JMP //execute eaton function to place a > at column 19
 
+        (as_checkOutputZeroTenThous)
+            //int is a zero
+            //check if its a leading zero
+            @as_leadingZeroBool
+            D=M
+            @kp_outputDec
+            D;JGT //if bool is 1, then go ahead and output 0
+
+            //ELSE, decrement column and move on
+            @ge_currentColumn
+            M=M-1
     (kp_thous)
 
-        @20
-        D=A
         @ge_currentColumn
-        M=D //sets column to 20
+        M=M+1 //inc column
 
         @kp_hund
         D=A
@@ -1464,14 +1492,42 @@ M=D //store contents of dividend into remainder
         @kp_currentDec
         M=D //kp_currentDec = ar_decThous
 
+        //if (0){
+        //  if(bool) {
+        //      cout << 0
+        //  } else
+        //  { do nothing }
+        // }else {
+        // bool = 1    
+        //}
+
+        //d contains value
+        @as_checkOutputZeroThous
+        D;JEQ //if output is 0, check to see if its a leading zero
+
+        //ELSE
+        //Set as_leadingZeroBool to 1 and proceed
+        @as_leadingZeroBool
+        M=1
+
         @kp_outputDec
-        0;JMP //execute eaton function to place a > at column 20
+        0;JMP
+
+        (as_checkOutputZeroThous)
+            //int is a zero
+            //check if its a leading zero
+            @as_leadingZeroBool
+            D=M
+            @kp_outputDec
+            D;JGT //if bool is 1, then go ahead and output 0
+
+            //ELSE, decrement column and move on
+            @ge_currentColumn
+            M=M-1
 
     (kp_hund)
-        @21
-        D=A
         @ge_currentColumn
-        M=D //sets column to 21
+        M=M+1 //inc column
 
         @kp_tens
         D=A
@@ -1481,16 +1537,44 @@ M=D //store contents of dividend into remainder
         @ar_decHund
         D=M
         @kp_currentDec
-        M=D //kp_currentDec = ar_decHund
+        M=D //kp_currentDec = ar_decThous
+
+        //if (0){
+        //  if(bool) {
+        //      cout << 0
+        //  } else
+        //  { do nothing }
+        // }else {
+        // bool = 1    
+        //}
+
+        //d contains value
+        @as_checkOutputZeroHund
+        D;JEQ //if output is 0, check to see if its a leading zero
+
+        //ELSE
+        //Set as_leadingZeroBool to 1 and proceed
+        @as_leadingZeroBool
+        M=1
 
         @kp_outputDec
-        0;JMP //execute eaton function to place a > at column 21
+        0;JMP
+
+        (as_checkOutputZeroHund)
+            //int is a zero
+            //check if its a leading zero
+            @as_leadingZeroBool
+            D=M
+            @kp_outputDec
+            D;JGT //if bool is 1, then go ahead and output 0
+
+            //ELSE, decrement column and move on
+            @ge_currentColumn
+            M=M-1
 
     (kp_tens)
-        @22
-        D=A
         @ge_currentColumn
-        M=D //sets column to 22
+        M=M+1 //inc column
 
         @kp_ones
         D=A
@@ -1500,16 +1584,44 @@ M=D //store contents of dividend into remainder
         @ar_decTens
         D=M
         @kp_currentDec
-        M=D //kp_currentDec = ar_decTens
+        M=D //kp_currentDec = ar_decThous
+
+        //if (0){
+        //  if(bool) {
+        //      cout << 0
+        //  } else
+        //  { do nothing }
+        // }else {
+        // bool = 1    
+        //}
+
+        //d contains value
+        @as_checkOutputZeroTens
+        D;JEQ //if output is 0, check to see if its a leading zero
+
+        //ELSE
+        //Set as_leadingZeroBool to 1 and proceed
+        @as_leadingZeroBool
+        M=1
 
         @kp_outputDec
-        0;JMP //execute eaton function to place a > at column 22
+        0;JMP
+
+        (as_checkOutputZeroTens)
+            //int is a zero
+            //check if its a leading zero
+            @as_leadingZeroBool
+            D=M
+            @kp_outputDec
+            D;JGT //if bool is 1, then go ahead and output 0
+
+            //ELSE, decrement column and move on
+            @ge_currentColumn
+            M=M-1
 
     (kp_ones)
-        @23
-        D=A
         @ge_currentColumn
-        M=D //sets column to 23
+        M=M+1 //inc column
 
         @as_getKey
         D=A
