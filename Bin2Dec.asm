@@ -259,11 +259,16 @@ M=D
 //========================================================================================================
 // Created by: Aidan Ramirez
 //========================================================================================================
-// 
+// Given 16 inputs,, each input will be stored in variables R[0..15]. 
+// The function detects whether a 1 or 0 value is present, where a value of 1 adds its respective decimal
+// value into a single variable named input. Negative variables and special cases are accounted for with 
+// the use of if-statements and 2's complement. The function will output the correct single binary word 
+// from these single inputs through the variable R16. 
 //=======================================================================================================
 // Variables
 //=======================================================================================================
-//
+// ar_input - single binary word that accumulates the values stored in the inputs, later to be transferred
+//            into R16
 //=======================================================================================================
 (ar_processBuf)
     @ar_input
