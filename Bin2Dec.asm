@@ -259,18 +259,20 @@ M=D
 //========================================================================================================
 // Created by: Aidan Ramirez
 //========================================================================================================
-// Takes the entered two's complement binary word from the user, and converts it to decimal using power
-// expansion. If the two's complement is representing a negative decimal value, the leading non-zero value
-// in the binary word will be negated. This new decimal value will then be stored into ar_decimalWord.
-// The program will also handle a special case, which is that if a user entered in the binary two' complement
-// value of '1000000000000000', the converted value will result in -32,768 stored in ar_decimalWord.
-// Example of conversion:
-// 1111 1111 1110 1110 = -32768+16384+8192+4096+2048+1024+512+256+128+64+32+8+4+2 = -18
+// Given 16 inputs,, each input will be stored in variables R[0..15]. 
+// The function detects whether a 1 or 0 value is present, where a value of 1 adds its respective decimal
+// value into a single variable named input. Negative variables and special cases are accounted for with 
+// the use of if-statements and 2's complement. The function will output the correct single binary word 
+// from these single inputs through the variable ar_decimalWord. 
 //=======================================================================================================
 // Variables
 //=======================================================================================================
-// ar_input           - accumulator of base expansion
-// as_decNegativeBool - bool that dictates whether or not the leading nonzero binary digit has been negated
+// ar_input - single binary word that accumulates the values stored in the inputs, later to be transferred
+//            into R16
+//  ar_decNegativeBool - marker to determine whether a change regarding a negative binary number must 
+//                       be completed
+// ar_decimalWord - output for the function. Input is assigned to this variable once all of the changes
+                    have occured, meaning the word is complete and ready for conversion.
 //=======================================================================================================
 (ar_processBuf)
     @ar_input
