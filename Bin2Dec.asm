@@ -980,7 +980,31 @@ M=D
 
     //Now our decimal word has been stored in ar_decimalWord
 
-//========================================================================
+//========================================================================================================
+// as_splitDecimalWord
+//========================================================================================================
+// Created by: Aidan Ramirez
+//========================================================================================================
+// Given a decimal word, the digits are marked and placed into their respective positions, ready to 
+// identified for output. This is done through repetitious division of the decimal eqiuvalent of the binary
+// word by powers of 10, each quotient marked into its approrpriate equation. 
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// ar_processBufBool - indicates processBuf has occured, used for later functions. 
+// ar_decTenThous - Number in Ten Thousands Digit
+// ar_decThous - Number in Thousands Digit
+// ar_decHund - Number in Hundreds digit
+// ar_decTen - Number in Tens digit
+// ar_decOnes - Number in Ones digit
+// ar_decSign - Holds a 1 or 0 to represent a negative or positive decimal respectively.
+// ar_quotient - Holds quotient to place into appropriate digit functions during division phase
+// ar_dividend - Holds number to be divided to find ar_quotient
+// ar_divisor - Holds number to divide by to find ar_quotient
+// ar_remainder - Holds the remainder after division, either replacing ar_dividend or ar_decOnes 
+//                eventually
+// as_algoReturn - Returns value of quotient after the algo function is run, representing an output. 
+//=======================================================================================================
     (as_splitDecimalWord)
     @as_processBufBool
     M=1 //bool that indicates processBuf has occured
