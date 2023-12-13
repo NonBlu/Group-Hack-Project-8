@@ -259,11 +259,18 @@ M=D
 //========================================================================================================
 // Created by: Aidan Ramirez
 //========================================================================================================
-// 
+// Takes the entered two's complement binary word from the user, and converts it to decimal using power
+// expansion. If the two's complement is representing a negative decimal value, the leading non-zero value
+// in the binary word will be negated. This new decimal value will then be stored into ar_decimalWord.
+// The program will also handle a special case, which is that if a user entered in the binary two' complement
+// value of '1000000000000000', the converted value will result in -32,768 stored in ar_decimalWord.
+// Example of conversion:
+// 1111 1111 1110 1110 = -32768+16384+8192+4096+2048+1024+512+256+128+64+32+8+4+2 = -18
 //=======================================================================================================
 // Variables
 //=======================================================================================================
-//
+// ar_input           - accumulator of base expansion
+// as_decNegativeBool - bool that dictates whether or not the leading nonzero binary digit has been negated
 //=======================================================================================================
 (ar_processBuf)
     @ar_input
@@ -931,17 +938,6 @@ M=D
         @ar_SpecialCase
         D;JEQ
         
-        //Else begin 2's complement on ar_input
-
-        // 1's complement
-        // @ar_input 
-        // D=M
-        // D=-D
-        // M=D
-        //     //Add 1
-        // @ar_input 
-        // M=M+1
-        
         //Jump to ENTER_R16
         @ar_ENTER_R16
         0;JMP
@@ -970,8 +966,31 @@ M=D
         M=D
 
     //Now our decimal word has been stored in ar_decimalWord
+//========================================================================================================
+// as_splitDecimalWord
+//========================================================================================================
+// Created by: Aidan Ramirez
+//========================================================================================================
+// Receives the converted decimal value from ar_processBuf. Using a division function, this function will
+// split each integer of the decimal value into 6 respective registers. These registers will later be used
+// to format the output word.
+//=======================================================================================================
+// Variables
+//=======================================================================================================
+// ar_decimalWord    - stores the entire decimal value of user input in one variable
+// as_processBufBool - bool that dictates whether the buffer has been processed or not
+// ar_quotient       - value to be stored into a variable. output of division
+// ar_dividend       - value being divided in division algorithm
+// ar_remainder      - remainder of division, used as the next divident in the next iteration
+// ar_divisor        - divisor used in division algorithm. ranges from 1,10,100,1000,10000
+// ar_decSign        - sign value of the decimal number
+// ar_decTenThous    - ten thousands place of the decimal number
+// ar_decThous       - thousands place of the decimal number
+// ar_decHund        - hundreds place of the decimal number
+// ar_decTens        - tens place of the decimal number
+// ar_decOnes        - ones place of the decimal number
+//=======================================================================================================
 
-//========================================================================
     (as_splitDecimalWord)
     @as_processBufBool
     M=1 //bool that indicates processBuf has occured
