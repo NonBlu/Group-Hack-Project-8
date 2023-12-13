@@ -968,31 +968,32 @@ M=D
         M=D
 
     //Now our decimal word has been stored in ar_decimalWord
+
 //========================================================================================================
 // as_splitDecimalWord
 //========================================================================================================
 // Created by: Aidan Ramirez
 //========================================================================================================
-// Receives the converted decimal value from ar_processBuf. Using a division function, this function will
-// split each integer of the decimal value into 6 respective registers. These registers will later be used
-// to format the output word.
+// Given a decimal word, the digits are marked and placed into their respective positions, ready to 
+// identified for output. This is done through repetitious division of the decimal eqiuvalent of the binary
+// word by powers of 10, each quotient marked into its approrpriate equation. 
 //=======================================================================================================
 // Variables
 //=======================================================================================================
-// ar_decimalWord    - stores the entire decimal value of user input in one variable
-// as_processBufBool - bool that dictates whether the buffer has been processed or not
-// ar_quotient       - value to be stored into a variable. output of division
-// ar_dividend       - value being divided in division algorithm
-// ar_remainder      - remainder of division, used as the next divident in the next iteration
-// ar_divisor        - divisor used in division algorithm. ranges from 1,10,100,1000,10000
-// ar_decSign        - sign value of the decimal number
-// ar_decTenThous    - ten thousands place of the decimal number
-// ar_decThous       - thousands place of the decimal number
-// ar_decHund        - hundreds place of the decimal number
-// ar_decTens        - tens place of the decimal number
-// ar_decOnes        - ones place of the decimal number
+// ar_processBufBool - indicates processBuf has occured, used for later functions. 
+// ar_decTenThous - Number in Ten Thousands Digit
+// ar_decThous - Number in Thousands Digit
+// ar_decHund - Number in Hundreds digit
+// ar_decTen - Number in Tens digit
+// ar_decOnes - Number in Ones digit
+// ar_decSign - Holds a 1 or 0 to represent a negative or positive decimal respectively.
+// ar_quotient - Holds quotient to place into appropriate digit functions during division phase
+// ar_dividend - Holds number to be divided to find ar_quotient
+// ar_divisor - Holds number to divide by to find ar_quotient
+// ar_remainder - Holds the remainder after division, either replacing ar_dividend or ar_decOnes 
+//                eventually
+// as_algoReturn - Returns value of quotient after the algo function is run, representing an output. 
 //=======================================================================================================
-
     (as_splitDecimalWord)
     @as_processBufBool
     M=1 //bool that indicates processBuf has occured
